@@ -37,6 +37,7 @@ To use this library, ensure you have the required Python packages installed:
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/schiumaweb.jpg  width="270">
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/segmentation1.png  width="270">
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/fractal_fit.png  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/bubbles_perfect.png  width="270">
 
 
 ## License
