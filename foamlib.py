@@ -1,45 +1,40 @@
 import numpy as np
 import cv2
+import os
 from skimage import measure, morphology
 from skimage.color import label2rgb
 from skimage.filters import threshold_otsu
 from scipy.ndimage import binary_fill_holes
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
+from scipy.spatial import distance_matrix
 
 class classic_segmentator:
 
-    def __init__(self, path, filename):
-        self.origin_images_path=path
-        self.img = cv2.imread(path)
-        self.filename=filename
+    def __init__(self, origin_folder, root, filename):
+        self.root = root
+        self.origin_folder = origin_folder
+        complete_path = os.path.join(origin_folder, root, filename)
+        self.img = cv2.imread(complete_path)
+        self.filename = filename
 
     def detecting_glass(self):
-        image = self.img
 
-        # Step 1: Edge detection using Canny
-        edges = cv2.Canny(image, threshold1=50, threshold2=150)
-
-        # Step 2: Hough Circle Transform to detect the glass circle
-        circles = cv2.HoughCircles(edges, 
-                                cv2.HOUGH_GRADIENT, 
-                                dp=1.2, 
-                                minDist=100, 
-                                param1=100, 
-                                param2=30, 
-                                minRadius=100, 
-                                maxRadius=300)
-
-        # Display the detected circles and process the cropping
-        if circles is not None:
-            circles = np.round(circles[0, :]).astype("int")
-            x, y, r = circles[0]  # Take the first (and ideally only) circle
-
-            # Step 3: Cropping the image based on the detected circle
-            x1, y1, x2, y2 = x - r, y - r, x + r, y + r  # Coordinates for the bounding box
-            cropped_image = image[max(0, y1):y2, max(0, x1):x2]
-            self.img=cropped_image
-            plt.imshow(self.img)
+        gray_image = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        _, binary_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if contours:
+            largest_contour = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+            cropped_image = self.img[y:y+h, x:x+w]
+            self.img = cropped_image
+            '''plt.imshow(self.img)
+            plt.show()'''
+            
+        else:
+            print("Nessun contorno rilevato!")
             
 
     def median_filter(self, contrast):
@@ -66,46 +61,17 @@ class classic_segmentator:
         thresh_val = threshold(smoothed) #Using OTSU iterative thresholdindg method
         binary = cv2.bitwise_not(thresh_val)  
         binary = morphology.remove_small_objects(binary.astype(bool), min_size=50).astype(np.uint8)
+        output_path = os.path.join(self.origin_folder, self.root, 'binarization')
+        os.makedirs(output_path, exist_ok=True)
         plt.imshow(binary, cmap='gray')
-        plt.savefig(f'binarization/{self.filename}')
-
+        plt.savefig(f'{self.root}/binarization/{self.filename}')
         # Masking
         labels = measure.label(binary, connectivity=2)
         props = measure.regionprops(labels)   
+        
         return binary, labels, props  
 
-    def filtering_counting_bubbles(self, minimum, max_diameter, props, eccentricity_threshold=0.7):
-        # Filtering bubbles based on diameter and eccentricity
-        min_diameter = minimum  
-        diameters = [prop.equivalent_diameter for prop in props 
-                    if prop.equivalent_diameter > min_diameter 
-                    and prop.equivalent_diameter < max_diameter 
-                    ]
-        
-        if len(diameters) == 0:
-            print("Nessuna bolla rilevata con i criteri specificati.")
-            return []
 
-        mean_diameter = np.mean(diameters)
-        print(f'Intresting data from frame {self.filename}')
-        print(f'Minimum diameter: {min(diameters)} pixels')
-        print(f'Maximum diameter: {max(diameters)} pixels')
-        print(f'Median diameter: {np.median(diameters)} pixels')
-        print(f'Average diameter with variance: {mean_diameter} +- {np.std(diameters)} pixels')
-        return diameters
-
-    def plotting_circles(self, props, diameters, min_diameter, max_diameter):
-        fig, ax = plt.subplots()
-        ax.imshow(self.img)
-        ax.set_title(f'Average bubble diameter: {np.mean(diameters):.2f} pixels')
-        # Drawing circles
-        for bubble in props:
-            if bubble.equivalent_diameter > min_diameter and bubble.equivalent_diameter < max_diameter:
-                y, x = bubble.centroid
-                radius = bubble.equivalent_diameter / 2
-                circ = plt.Circle((x, y), radius, color='r', fill=False, linewidth=0.7)
-                ax.add_patch(circ)
-        plt.savefig(f'segmentation/{self.filename}')
         
 
 
@@ -120,12 +86,12 @@ class classic_segmentator:
         Returns:
             (float, list, list): La dimensione frattale e i dati per il grafico."""
     def computing_fractal_dimension(self, binary_image, min_box_size=2, max_box_size=1000):
-
         box_sizes = []
         box_counts = []
+        
         # Box counting
         for box_size in range(min_box_size, max_box_size, 2):
-            # Divinìding image into a grid (box_size X box_size)
+            # Dividing image into a grid (box_size X box_size)
             count = 0
             for y in range(0, binary_image.shape[0], box_size):
                 for x in range(0, binary_image.shape[1], box_size):
@@ -134,15 +100,93 @@ class classic_segmentator:
                         count += 1
             box_sizes.append(box_size)
             box_counts.append(count)
+        
         # Fractal dimension with least square method
         coeffs = np.polyfit(np.log(box_sizes), np.log(box_counts), 1)
         fractal_dimension = -coeffs[0]
+
         return fractal_dimension, box_sizes, box_counts
 
 
+    def calculate_correlation_with_neighbors(self, props):
+        # Estrarre i centri e i diametri delle bolle
+        centroids = np.array([prop.centroid for prop in props])
+        diameters = np.array([prop.equivalent_diameter for prop in props])
+        
+        if len(diameters) == 0:
+            print("No bubbles detected.")
+            return None
+
+        # Calcolare la matrice delle distanze tra i centri delle bolle
+        dist_matrix = distance_matrix(centroids, centroids)
+
+        correlations = []
+        
+        for i, D in enumerate(diameters):
+            # Trovare gli indici dei vicini il cui centro è entro una distanza <= 2D
+            neighbors = np.where((dist_matrix[i] <= 5 * D) & (dist_matrix[i] > 0))[0]  # Ignora la bolla stessa
+
+            if len(neighbors) > 0:
+                neighbor_diameters = diameters[neighbors]
+                # Calcolare la correlazione tra il diametro della bolla in esame e i vicini
+                correlation = np.corrcoef(np.full(len(neighbor_diameters), D), neighbor_diameters)[0, 1]
+
+                correlations.append(correlation)
+
+        # Restituire la media delle correlazioni o un'altra misura caratteristica
+        mean_correlation = np.nanmean(correlations)  # Gestisce i NaN se non ci sono vicini
+        return mean_correlation
+    
+
+    def saving_statistical_data(self, fractal_dimension, min_diameter, max_diameter, props, excel_path):
+
+         # Filtering bubbles based on diameter and eccentricity
+        diameters = [prop.equivalent_diameter for prop in props 
+                    if prop.equivalent_diameter > min_diameter 
+                    and prop.equivalent_diameter < max_diameter]
+
+        if len(diameters) == 0:
+            print("No bubbles detected.")
+            return []
+
+        mean_diameter = np.mean(diameters)
+        min_diam = min(diameters)
+        max_diam = max(diameters)
+        median_diam = np.median(diameters)
+        std_diam = np.std(diameters)
+
+        # Dati da salvare su Excel
+        data = {
+            'Filename': [self.filename],
+            'Fractal Dimension': [fractal_dimension],
+            'Minimum Diameter (pixels)': [min_diam],
+            'Maximum Diameter (pixels)': [max_diam],
+            'Median Diameter (pixels)': [median_diam],
+            'Average Diameter (pixels)': [mean_diameter],
+            'Variance (pixels)': [std_diam], 
+            'Radius (cm)': 4.79, 
+            'Resolution (pixels)': 1024, 
+            'Radius bubbles (cm)': np.array([mean_diameter])/1024 * 4.79, 
+            'Average correlation': self.calculate_correlation_with_neighbors(props)
+        }
+        # Se un percorso Excel è stato fornito, salviamo la dimensione frattale
+        if excel_path:
+            # Riapriamo il file Excel e aggiungiamo la dimensione frattale
+            
+            df = pd.DataFrame(data)
+            try:
+                with pd.ExcelWriter(excel_path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                    df.to_excel(writer, sheet_name='Bubble Data', index=False, header=writer.sheets.get('Bubble Data') is None, startrow=writer.sheets['Bubble Data'].max_row if 'Bubble Data' in writer.sheets else 0)
+            except FileNotFoundError:
+                # Se il file non esiste, lo crea
+                df.to_excel(excel_path, sheet_name='Bubble Data', index=False)
+        return diameters
+
+
     def fractal_dimension_fit(self, fractal_dimension, box_sizes, box_counts):
+        output_path = os.path.join(self.origin_folder, self.root, 'fractal_fit')
+        os.makedirs(output_path, exist_ok=True)
         sns.set_style('darkgrid')
-        print(f'Bubbles fractal dimension: {fractal_dimension:.2f}')
 
         # Fractal dimension fit
         plt.figure(figsize=(8, 6))
@@ -152,7 +196,27 @@ class classic_segmentator:
         plt.xlabel('Log(Box size)')
         plt.ylabel('Log(Box count)')
         plt.legend()
-        plt.savefig(f'fractal_fit/{self.filename}')
+        plt.savefig(f'{self.root}/fractal_fit/{self.filename}')
+        plt.close()
+
+
+
+
+    def plotting_circles(self, props, diameters, min_diameter, max_diameter):
+        fig, ax = plt.subplots()
+        ax.imshow(self.img)
+        ax.set_title(f'Average bubble diameter: {np.mean(diameters):.2f} pixels')
+        # Drawing circles
+        output_path = os.path.join(self.origin_folder, self.root, 'segmentation')
+        os.makedirs(output_path, exist_ok=True)
+        for bubble in props:
+            if bubble.equivalent_diameter > min_diameter and bubble.equivalent_diameter < max_diameter:
+                y, x = bubble.centroid
+                radius = bubble.equivalent_diameter / 2
+                circ = plt.Circle((x, y), radius, color='r', fill=False, linewidth=0.7)
+                ax.add_patch(circ)
+        plt.savefig(f'{self.root}/segmentation/{self.filename}')
+        plt.close(fig)
         
 
 
