@@ -34,7 +34,7 @@ class classic_segmentator:
             plt.show()'''
             
         else:
-            print("Nessun contorno rilevato!")
+            print("No contour detected")
             
 
     def median_filter(self, contrast):
@@ -64,7 +64,7 @@ class classic_segmentator:
         output_path = os.path.join(self.origin_folder, self.root, 'binarization')
         os.makedirs(output_path, exist_ok=True)
         plt.imshow(binary, cmap='gray')
-        plt.savefig(f'{self.root}/binarization/{self.filename}')
+        plt.savefig(f'{self.root}/binarization/{self.filename}', dpi=300)
         # Masking
         labels = measure.label(binary, connectivity=2)
         props = measure.regionprops(labels)   
@@ -167,7 +167,7 @@ class classic_segmentator:
             'Radius (cm)': 4.79, 
             'Resolution (pixels)': 1024, 
             'Radius bubbles (cm)': np.array([mean_diameter])/1024 * 4.79, 
-            'Average correlation': self.calculate_correlation_with_neighbors(props)
+            'Average correlation': 0 #self.calculate_correlation_with_neighbors(props)
         }
         # Se un percorso Excel è stato fornito, salviamo la dimensione frattale
         if excel_path:
@@ -215,7 +215,7 @@ class classic_segmentator:
                 radius = bubble.equivalent_diameter / 2
                 circ = plt.Circle((x, y), radius, color='r', fill=False, linewidth=0.7)
                 ax.add_patch(circ)
-        plt.savefig(f'{self.root}/segmentation/{self.filename}')
+        plt.savefig(f'{self.root}/segmentation/{self.filename}', dpi=300)
         plt.close(fig)
         
 
