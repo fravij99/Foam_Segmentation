@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from scipy.spatial import distance_matrix
+import random
+from scipy.optimize import curve_fit
+from tqdm import tqdm
+
 
 class classic_segmentator:
 
@@ -36,16 +40,19 @@ class classic_segmentator:
         else:
             print("No contour detected")
             
-
+    @staticmethod
     def median_filter(self, contrast):
         return cv2.medianBlur(contrast, 7)
     
+    @staticmethod
     def gaussian_filter(self, contrast):
         return cv2.GaussianBlur(contrast, (5, 5), 0)
     
+    @staticmethod
     def threshold_otsu(self, smoothed):
         return cv2.threshold(smoothed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1] #Using OTSU iterative thresholdindg method
     
+    @staticmethod
     def threshold_adaptive(self, smoothed):
         return cv2.adaptiveThreshold(smoothed, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                cv2.THRESH_BINARY_INV, 15, 2)
@@ -72,9 +79,7 @@ class classic_segmentator:
         return binary, labels, props  
 
 
-        
-
-
+    
     """Calcola la dimensione frattale usando il metodo del box-counting e ritorna i dati
         per il grafico.
         
@@ -164,7 +169,7 @@ class classic_segmentator:
             'Median Diameter (pixels)': [median_diam],
             'Average Diameter (pixels)': [mean_diameter],
             'Variance (pixels)': [std_diam], 
-            'Radius (cm)': 4.79, 
+            'Radius (cm)': 8, 
             'Resolution (pixels)': 1024, 
             'Radius bubbles (cm)': np.array([mean_diameter])/1024 * 4.79, 
             'Average correlation': 0 #self.calculate_correlation_with_neighbors(props)
@@ -277,3 +282,194 @@ class fractal_segmentator:
 
         return refined_mask
     
+
+class heigth_measurer:
+
+    def misura_altezza_schiuma(self, frame, bounding_box):
+        """
+        Calcola l'altezza della schiuma in un'immagine binarizzata.
+        La schiuma è rappresentata da righe completamente nere.
+        """
+        x, y, w, h = bounding_box
+        
+        # Ritaglia la regione di interesse (ROI) dall'immagine
+        roi = frame[y:y+h, x:x+w]
+        
+        # Conta le righe completamente nere
+        row_sums = np.sum(roi == 0, axis=1)  # Somma dei pixel neri per riga
+        foam_rows = np.where(row_sums == w)[0]  # Trova righe completamente nere
+        
+        if foam_rows.size > 0:
+            foam_height = len(foam_rows)  # Numero di righe completamente nere consecutive
+        else:
+            foam_height = 0  # Nessuna schiuma rilevata
+        
+        return foam_height
+
+
+    # Funzione per calcolare e tracciare l'evoluzione temporale della schiuma
+    def foam_progression_plot(self, immagini, start_x, end_x, col_width, num_colonne, y, h):
+        """
+        Calcola e traccia l'evoluzione temporale dell'altezza della schiuma.
+        """
+        # Genera posizioni casuali uniformi per le colonne
+        colonne_x = sorted([random.randint(start_x, end_x - col_width) for _ in range(num_colonne)])
+        
+        # Calcolo dell'altezza della schiuma per ciascuna immagine
+        altezze_colonne = {x: [] for x in colonne_x}  # Dizionario per memorizzare le altezze per ciascuna colonna
+        
+        for frame in immagini:
+            for x in colonne_x:
+                bounding_box = (x, y, col_width, h)  # Bounding box per la colonna
+                altezza_schiuma = self.misura_altezza_schiuma(frame, bounding_box)
+                altezze_colonne[x].append(altezza_schiuma)
+        
+        # Calcola la media e la deviazione standard delle altezze per ciascun passo temporale
+        num_immagini = len(immagini)
+        altezze_medie = []
+        deviazioni_standard = []
+        
+        for i in range(num_immagini):
+            altezze_step = [altezze_colonne[x][i] for x in colonne_x]
+            altezze_medie.append(np.mean(altezze_step))
+            deviazioni_standard.append(np.std(altezze_step))
+        
+        # Fit esponenziale
+        def funzione_esponenziale(t, a, b, c):
+            return a * np.exp(b * t) + c
+
+        time_indices = np.arange(num_immagini)
+        parametri_iniziali = [1, 0.01, 1]  # Valori iniziali per il fit
+        popt, _ = curve_fit(funzione_esponenziale, time_indices, altezze_medie, p0=parametri_iniziali, maxfev=5000)
+
+        # Parametri ottimizzati
+        a, b, c = popt
+
+        # Calcola i valori del fit
+        fit_values = funzione_esponenziale(time_indices, a, b, c)
+        
+        # Plot delle altezze con barre di errore e fit esponenziale
+        plt.figure(figsize=(12, 6))
+        
+        # Dati originali con barre di errore
+        plt.errorbar(
+            time_indices,
+            altezze_medie,
+            yerr=deviazioni_standard,
+            fmt='o',
+            color='lightblue',
+            ecolor='black',
+            markeredgecolor='black',
+            elinewidth=1,
+            capsize=3,
+            label='Media delle colonne con deviazione standard'
+        )
+        
+        # Fit esponenziale
+        plt.plot(
+            time_indices,
+            fit_values,
+            color='red',
+            linestyle='--',
+            label=f'Fit esponenziale: a={a:.2f}, b={b:.4f}, c={c:.2f}'
+        )
+        
+        plt.xlabel('Indice temporale')
+        plt.ylabel('Altezza della schiuma (pixel)')
+        plt.title('foam evolution for IDS Rocca4')
+        plt.legend()
+        plt.show()
+
+
+class Binarizer:
+    def __init__(self, origin_folder, output_folder):
+        """
+        Inizializza la classe Binarizer con la directory di origine e la directory di output.
+        """
+        self.origin_folder = origin_folder
+        self.output_folder = output_folder
+
+    @staticmethod
+    def apply_clahe(image):
+        """
+        Applica il filtro CLAHE per migliorare il contrasto dell'immagine.
+        """
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        return clahe.apply(image)
+
+    @staticmethod
+    def median_filter(image):
+        """
+        Applica il filtro mediano all'immagine.
+        """
+        return cv2.medianBlur(image, 7)
+
+    @staticmethod
+    def threshold_otsu(image):
+        """
+        Applica la soglia di Otsu per binarizzare l'immagine.
+        """
+        return cv2.bitwise_not(cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1])
+                  
+
+    @staticmethod
+    def clean_binary_image(binary_image):
+        """
+        Rimuove piccoli oggetti dal risultato binarizzato.
+        """
+        return morphology.remove_small_objects(binary_image.astype(bool), min_size=50).astype(np.uint8)
+
+    def process_image(self, image):
+        """
+        Esegue la binarizzazione completa su un'immagine.
+        """
+        # Converti in scala di grigi se necessario
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image
+        
+        # Miglioramento del contrasto
+        contrast = self.apply_clahe(gray)
+        
+        # Filtro per ridurre il rumore
+        smoothed = self.median_filter(contrast)
+        
+        # Binarizzazione con Otsu
+        binary = self.threshold_otsu(smoothed)
+        
+        # Rimuovi piccoli oggetti
+        cleaned_binary = self.clean_binary_image(binary)
+        
+        return cleaned_binary
+
+    def binarize_folder(self):
+        """
+        Esegue la binarizzazione su tutte le immagini nella cartella di origine e salva
+        le immagini binarizzate nella cartella di output mantenendo la struttura.
+        """
+        for root, _, files in os.walk(self.origin_folder):
+            # Determina il percorso relativo
+            relative_path = os.path.relpath(root, self.origin_folder)
+            output_path = os.path.join(self.output_folder, relative_path)
+            os.makedirs(output_path, exist_ok=True)
+            
+            for file in files:
+                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+                    # Percorso completo dei file
+                    input_file = os.path.join(root, file)
+                    output_file = os.path.join(output_path, file)
+                    
+                    # Carica l'immagine
+                    image = cv2.imread(input_file)
+                    if image is None:
+                        print(f"Errore nel caricamento dell'immagine: {input_file}")
+                        continue
+                    
+                    # Binarizza l'immagine
+                    binary_image = self.process_image(image)
+                    
+                    # Salva l'immagine binarizzata
+                    plt.imsave(output_file, binary_image, cmap='gray')
+                    print(f"Immagine binarizzata salvata: {output_file}")
+        return output_path
