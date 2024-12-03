@@ -12,7 +12,7 @@ from scipy.spatial import distance_matrix
 import random
 from scipy.optimize import curve_fit
 from tqdm import tqdm
-
+from matplotlib.widgets import RectangleSelector
 
 class classic_segmentator:
 
@@ -285,6 +285,43 @@ class fractal_segmentator:
 
 class heigth_measurer:
 
+    def __init__(self, root):
+        self.root = root
+        self.roi_coords = []  # Per salvare le coordinate della ROI
+
+    def select_roi(self, image):
+        """
+        Mostra l'immagine e consente di selezionare una ROI interattiva con il mouse.
+        """
+        def onselect(eclick, erelease):
+            """
+            Callback per la selezione della ROI.
+            Salva le coordinate della bounding box selezionata.
+            """
+            x1, y1 = int(eclick.xdata), int(eclick.ydata)
+            x2, y2 = int(erelease.xdata), int(erelease.ydata)
+            self.roi_coords = [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
+            print(f"ROI selected: {self.roi_coords}")
+            plt.close()  # Chiude la finestra dopo la selezione
+
+        # Visualizza l'immagine per selezionare la ROI
+        fig, ax = plt.subplots()
+        ax.imshow(image, cmap='gray')
+        ax.set_title("Select the ROI")
+
+        # Inizializza RectangleSelector
+        toggle_selector = RectangleSelector(
+            ax, onselect, drawtype='box', useblit=True,
+            button=[1],  # Solo click sinistro
+            minspanx=5, minspany=5,  # Dimensione minima della selezione
+            spancoords='pixels', interactive=True
+        )
+        plt.show()
+
+        # Ritorna le coordinate della ROI (opzionale)
+        return self.roi_coords
+        
+
     def misura_altezza_schiuma(self, frame, bounding_box):
         """
         Calcola l'altezza della schiuma in un'immagine binarizzata.
@@ -307,40 +344,61 @@ class heigth_measurer:
         return foam_height
 
 
-    # Funzione per calcolare e tracciare l'evoluzione temporale della schiuma
-    def foam_progression_plot(self, immagini, start_x, end_x, col_width, num_colonne, y, h):
+    def foam_progression_plot(self, images, start_x, end_x, start_y, end_y):
         """
-        Calcola e traccia l'evoluzione temporale dell'altezza della schiuma.
+        Calculate and plot the temporal evolution of foam height deterministically.
+        Handles outliers in the column heights by weighting them to reduce their impact on the statistics.
         """
-        # Genera posizioni casuali uniformi per le colonne
-        colonne_x = sorted([random.randint(start_x, end_x - col_width) for _ in range(num_colonne)])
-        
-        # Calcolo dell'altezza della schiuma per ciascuna immagine
-        altezze_colonne = {x: [] for x in colonne_x}  # Dizionario per memorizzare le altezze per ciascuna colonna
-        
-        for frame in immagini:
-            for x in colonne_x:
-                bounding_box = (x, y, col_width, h)  # Bounding box per la colonna
-                altezza_schiuma = self.misura_altezza_schiuma(frame, bounding_box)
-                altezze_colonne[x].append(altezza_schiuma)
-        
-        # Calcola la media e la deviazione standard delle altezze per ciascun passo temporale
-        num_immagini = len(immagini)
-        altezze_medie = []
-        deviazioni_standard = []
-        
-        for i in range(num_immagini):
-            altezze_step = [altezze_colonne[x][i] for x in colonne_x]
-            altezze_medie.append(np.mean(altezze_step))
-            deviazioni_standard.append(np.std(altezze_step))
+        # List to store mean heights and standard deviations for all images
+        column_heights = []
+
+        # Loop through all images
+        for frame in images:
+            # Initialize a list to store the height of each column for the current frame
+            heights = []
+
+            # Iterate over all columns in the ROI
+            for x in range(start_x, end_x):
+                bounding_box = (x, start_y, 1, end_y - start_y)  # 1-pixel wide column
+                foam_height = self.misura_altezza_schiuma(frame, bounding_box)
+                heights.append(foam_height)
+
+            # Calculate mean and standard deviation of heights
+            mean_height = np.mean(heights)
+            std_dev = np.std(heights)
+
+            # Define thresholds for outliers
+            upper_threshold = mean_height + 1.5 * std_dev
+            lower_threshold = mean_height - 1.5 * std_dev
+
+            # Apply weights to outliers
+            weighted_heights = []
+            for h in heights:
+                if h > upper_threshold:  # Outlier above
+                    weighted_heights.append(upper_threshold + (h - upper_threshold) * 0.25)
+                elif h < lower_threshold:  # Outlier below
+                    weighted_heights.append(lower_threshold + (h - lower_threshold) * 0.25)
+                else:  # Inliers
+                    weighted_heights.append(h)
+
+            # Calculate weighted mean and standard deviation
+            weighted_mean = np.mean(weighted_heights)
+            weighted_std_dev = np.std(weighted_heights)
+
+            # Store results
+            column_heights.append((weighted_mean, weighted_std_dev))
+
+        # Separate means and standard deviations for plotting
+        means = [h[0] for h in column_heights]
+        std_devs = [h[1] for h in column_heights]
         
         # Fit esponenziale
         def funzione_esponenziale(t, a, b, c):
             return a * np.exp(b * t) + c
 
-        time_indices = np.arange(num_immagini)
+        time_indices = np.arange(len(images))
         parametri_iniziali = [1, 0.01, 1]  # Valori iniziali per il fit
-        popt, _ = curve_fit(funzione_esponenziale, time_indices, altezze_medie, p0=parametri_iniziali, maxfev=5000)
+        popt, _ = curve_fit(funzione_esponenziale, time_indices, means, p0=parametri_iniziali, maxfev=5000)
 
         # Parametri ottimizzati
         a, b, c = popt
@@ -354,15 +412,15 @@ class heigth_measurer:
         # Dati originali con barre di errore
         plt.errorbar(
             time_indices,
-            altezze_medie,
-            yerr=deviazioni_standard,
+            means,
+            yerr=std_devs,
             fmt='o',
             color='lightblue',
             ecolor='black',
             markeredgecolor='black',
             elinewidth=1,
             capsize=3,
-            label='Media delle colonne con deviazione standard'
+            label='Column average'
         )
         
         # Fit esponenziale
@@ -371,23 +429,24 @@ class heigth_measurer:
             fit_values,
             color='red',
             linestyle='--',
-            label=f'Fit esponenziale: a={a:.2f}, b={b:.4f}, c={c:.2f}'
+            label=f'Exp fit: a={a:.2f}, b={b:.4f}, c={c:.2f}'
         )
         
-        plt.xlabel('Indice temporale')
-        plt.ylabel('Altezza della schiuma (pixel)')
-        plt.title('foam evolution for IDS Rocca4')
+        plt.xlabel('Frames')
+        plt.ylabel('Foam heigth (pixel)')
+        plt.title(f'Foam evolution')
         plt.legend()
+        plt.savefig(self.root+f'curve_fit.png', dpi=300)
         plt.show()
 
 
 class Binarizer:
-    def __init__(self, origin_folder, output_folder):
-        """
-        Inizializza la classe Binarizer con la directory di origine e la directory di output.
-        """
+    def __init__(self, origin_folder, root, filename):
+        self.root = root
         self.origin_folder = origin_folder
-        self.output_folder = output_folder
+        complete_path = os.path.join(origin_folder, root, filename)
+        self.img = cv2.imread(complete_path)
+        self.filename = filename
 
     @staticmethod
     def apply_clahe(image):
@@ -423,53 +482,24 @@ class Binarizer:
         """
         Esegue la binarizzazione completa su un'immagine.
         """
-        # Converti in scala di grigi se necessario
         if len(image.shape) == 3:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         else:
             gray = image
-        
-        # Miglioramento del contrasto
         contrast = self.apply_clahe(gray)
-        
-        # Filtro per ridurre il rumore
         smoothed = self.median_filter(contrast)
-        
-        # Binarizzazione con Otsu
         binary = self.threshold_otsu(smoothed)
-        
-        # Rimuovi piccoli oggetti
         cleaned_binary = self.clean_binary_image(binary)
         
         return cleaned_binary
 
     def binarize_folder(self):
-        """
-        Esegue la binarizzazione su tutte le immagini nella cartella di origine e salva
-        le immagini binarizzate nella cartella di output mantenendo la struttura.
-        """
-        for root, _, files in os.walk(self.origin_folder):
-            # Determina il percorso relativo
-            relative_path = os.path.relpath(root, self.origin_folder)
-            output_path = os.path.join(self.output_folder, relative_path)
-            os.makedirs(output_path, exist_ok=True)
-            
-            for file in files:
-                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
-                    # Percorso completo dei file
-                    input_file = os.path.join(root, file)
-                    output_file = os.path.join(output_path, file)
+         
+        # Binarizza l'immagine
+        binary_image = self.process_image(self.img)
                     
-                    # Carica l'immagine
-                    image = cv2.imread(input_file)
-                    if image is None:
-                        print(f"Errore nel caricamento dell'immagine: {input_file}")
-                        continue
+        output_path = os.path.join(self.origin_folder, self.root, 'binarization')
+        os.makedirs(output_path, exist_ok=True)
+        plt.imsave(f'{self.root}/binarization/{self.filename}', arr=binary_image, cmap='gray')
                     
-                    # Binarizza l'immagine
-                    binary_image = self.process_image(image)
-                    
-                    # Salva l'immagine binarizzata
-                    plt.imsave(output_file, binary_image, cmap='gray')
-                    print(f"Immagine binarizzata salvata: {output_file}")
-        return output_path
+        return binary_image

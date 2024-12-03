@@ -1,40 +1,45 @@
-import cv2
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-import random
-from scipy.optimize import curve_fit
-import seaborn as sns
 import foamlib
+import matplotlib.pyplot as plt
+import numpy as np
+from tqdm import tqdm
+import os
+import seaborn as sns
+
 sns.set_style('darkgrid')
+# Percorso principale
+main_folder = "C:/Users/Francesco/Downloads/IDSRocca"
 
-# Percorso alla cartella di origine contenente tutte le immagini
-path = "C:/Users/Francesco/Downloads/IDSRocca4/IDSRocca4"
-# Percorso alla cartella di output dove salvare le immagini binarizzate
-output_folder = "C:/Users/Francesco/Downloads/IDSRocca4/IDSRocca4/binarization"
-# Crea un'istanza della classe Binarizer
-binarizer = foamlib.Binarizer(path, output_folder)
-# Esegui la binarizzazione
-output_folder=binarizer.binarize_folder()
 
-heigth=foamlib.heigth_measurer()
+for root, dirs, files in os.walk(main_folder):
+    binary_images = []
+    if not files:  # Salta directory senza file
+        print(f"Nessun file trovato in {root}, passando alla prossima directory.")
+        continue
 
-# Percorso alla cartella con le immagini binarizzate
+    for nome_file in tqdm(files, desc=f'Analizzando frames in {root}...'):
+        binarizer = foamlib.Binarizer(main_folder, root, nome_file)
+        binary = binarizer.binarize_folder()
+        if binary is not None:  # Aggiungi solo immagini valide
+            binary_images.append(binary)
+        else:
+            print(f"Errore nella binarizzazione del file {nome_file}")
 
-# Carica tutte le immagini binarizzate
-immagini = [cv2.imread(os.path.join(output_folder, f), cv2.IMREAD_GRAYSCALE) for f in sorted(os.listdir(output_folder)) 
-            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
-plt.imshow(immagini[0])
-# Verifica che siano state caricate immagini
-if not immagini:
-    print("Nessuna immagine trovata nella directory.")
-else:
-    # Parametri della regione di campionamento
-    start_x = 550  # Inizio della regione
-    end_x = 660    # Fine della regione
-    col_width = 5  # Larghezza di ciascuna colonna
-    num_colonne = 100  # Numero di colonne da campionare
-    y, h = 400, 700  # Coordinate e altezza della ROI
+    if not binary_images:  # Salta visualizzazione se lista vuota
+        print(f"Nessuna immagine binarizzata in {root}, continuando.")
+        continue
+
+    # Usa HeightMeasurer per selezionare la ROI
+    heigth = foamlib.heigth_measurer(root)
+    plt.imshow(binary_images[len(binary_images)-1], cmap='gray')
+    plt.show()
+    roi_coords = heigth.select_roi(binary_images[0])  # Seleziona ROI dalla prima immagine
+
+    if not roi_coords:
+        print("Nessuna ROI selezionata, continuando.")
+        continue
+
+    # Usa le coordinate della ROI selezionata
+    start_x, start_y, end_x, end_y = roi_coords[0], roi_coords[1], roi_coords[2], roi_coords[3]
 
     # Traccia l'evoluzione temporale della schiuma
-    heigth.foam_progression_plot(immagini, start_x, end_x, col_width, num_colonne, y, h)
+    heigth.foam_progression_plot(binary_images, start_x, end_x, start_y, end_y)
