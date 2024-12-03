@@ -1,6 +1,6 @@
 # Foam imaging segmentator
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/bubbles_perfect.png  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/schiumaweb5.png  width="270">
 
 Hello everyone! This repository deals with the image segmemtation of different foam structures. The main dataset is coming from hyperspectral acquisitions of sparkling wine. The aim of the wotrk consists in segmenting bubbles from different points of view in order to extract relevant features as average bubble size or the temporal evolution of the foam. Another relevat parameter could be represented by the relaxing time of the foam, where the study of the bubbles dynamics could be modeled by statistical mechanics (probably percolation).
 
@@ -45,8 +45,6 @@ To use this library, ensure you have the required Python packages installed:
 
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/schiumaweb.jpg  width="270">
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/segmentation1.png  width="270">
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/fractal_fit.png  width="270">
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/bubbles_perfect.png  width="270">
 
 ## Foam heigth
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/IDSBentivoglio2curve_fit.png  width="270">
