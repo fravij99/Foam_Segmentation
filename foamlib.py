@@ -40,19 +40,19 @@ class classic_segmentator:
         else:
             print("No contour detected")
             
-    @staticmethod
+
     def median_filter(self, contrast):
         return cv2.medianBlur(contrast, 7)
     
-    @staticmethod
+
     def gaussian_filter(self, contrast):
         return cv2.GaussianBlur(contrast, (5, 5), 0)
     
-    @staticmethod
+
     def threshold_otsu(self, smoothed):
         return cv2.threshold(smoothed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1] #Using OTSU iterative thresholdindg method
     
-    @staticmethod
+
     def threshold_adaptive(self, smoothed):
         return cv2.adaptiveThreshold(smoothed, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                cv2.THRESH_BINARY_INV, 15, 2)
@@ -70,8 +70,7 @@ class classic_segmentator:
         binary = morphology.remove_small_objects(binary.astype(bool), min_size=50).astype(np.uint8)
         output_path = os.path.join(self.origin_folder, self.root, 'binarization')
         os.makedirs(output_path, exist_ok=True)
-        plt.imshow(binary, cmap='gray')
-        plt.savefig(f'{self.root}/binarization/{self.filename}', dpi=300)
+        plt.imsave(f'{self.root}/binarization/{self.filename}', cmap='gray', arr=binary, dpi=300)
         # Masking
         labels = measure.label(binary, connectivity=2)
         props = measure.regionprops(labels)   
@@ -80,16 +79,15 @@ class classic_segmentator:
 
 
     
-    """Calcola la dimensione frattale usando il metodo del box-counting e ritorna i dati
-        per il grafico.
+    """Computing fractal dimension using box-countig method
         
         Parameters:
-            binary_image (ndarray): Immagine binaria con le bolle segmentate.
-            min_box_size (int): Dimensione minima del box.
-            max_box_size (int): Dimensione massima del box.
+            binary_image (ndarray)
+            min_box_size (int)
+            max_box_size (int)
             
         Returns:
-            (float, list, list): La dimensione frattale e i dati per il grafico."""
+            (float, list, list): The fractal dimension of a frame and the data for the plot."""
     def computing_fractal_dimension(self, binary_image, min_box_size=2, max_box_size=1000):
         box_sizes = []
         box_counts = []
@@ -114,7 +112,7 @@ class classic_segmentator:
 
 
     def calculate_correlation_with_neighbors(self, props):
-        # Estrarre i centri e i diametri delle bolle
+        # centroids and diametres of the bubbles
         centroids = np.array([prop.centroid for prop in props])
         diameters = np.array([prop.equivalent_diameter for prop in props])
         
@@ -122,24 +120,22 @@ class classic_segmentator:
             print("No bubbles detected.")
             return None
 
-        # Calcolare la matrice delle distanze tra i centri delle bolle
         dist_matrix = distance_matrix(centroids, centroids)
-
         correlations = []
         
         for i, D in enumerate(diameters):
-            # Trovare gli indici dei vicini il cui centro è entro una distanza <= 2D
-            neighbors = np.where((dist_matrix[i] <= 5 * D) & (dist_matrix[i] > 0))[0]  # Ignora la bolla stessa
+            # Indices of the nearest neighbours 
+            neighbors = np.where((dist_matrix[i] <= 5 * D) & (dist_matrix[i] > 0))[0]  
 
             if len(neighbors) > 0:
                 neighbor_diameters = diameters[neighbors]
-                # Calcolare la correlazione tra il diametro della bolla in esame e i vicini
+                # correlation between diameters and the nearest neighbours
                 correlation = np.corrcoef(np.full(len(neighbor_diameters), D), neighbor_diameters)[0, 1]
 
                 correlations.append(correlation)
 
-        # Restituire la media delle correlazioni o un'altra misura caratteristica
-        mean_correlation = np.nanmean(correlations)  # Gestisce i NaN se non ci sono vicini
+        # Mean of the correlations
+        mean_correlation = np.nanmean(correlations)  # NAN filtering
         return mean_correlation
     
 
@@ -160,9 +156,10 @@ class classic_segmentator:
         median_diam = np.median(diameters)
         std_diam = np.std(diameters)
 
-        # Dati da salvare su Excel
+        # excel data
         data = {
             'Filename': [self.filename],
+            'Bubbles number': [len(diameters)],
             'Fractal Dimension': [fractal_dimension],
             'Minimum Diameter (pixels)': [min_diam],
             'Maximum Diameter (pixels)': [max_diam],
@@ -170,20 +167,19 @@ class classic_segmentator:
             'Average Diameter (pixels)': [mean_diameter],
             'Variance (pixels)': [std_diam], 
             'Radius (cm)': 8, 
-            'Resolution (pixels)': 1024, 
-            'Radius bubbles (cm)': np.array([mean_diameter])/1024 * 4.79, 
+            'Resolution (pixels)': 2500, 
+            'Radius bubbles (cm)': np.array([mean_diameter])/2500 * 8, 
             'Average correlation': 0 #self.calculate_correlation_with_neighbors(props)
         }
-        # Se un percorso Excel è stato fornito, salviamo la dimensione frattale
+
         if excel_path:
-            # Riapriamo il file Excel e aggiungiamo la dimensione frattale
             
             df = pd.DataFrame(data)
             try:
                 with pd.ExcelWriter(excel_path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
                     df.to_excel(writer, sheet_name='Bubble Data', index=False, header=writer.sheets.get('Bubble Data') is None, startrow=writer.sheets['Bubble Data'].max_row if 'Bubble Data' in writer.sheets else 0)
             except FileNotFoundError:
-                # Se il file non esiste, lo crea
+                
                 df.to_excel(excel_path, sheet_name='Bubble Data', index=False)
         return diameters
 
@@ -201,10 +197,8 @@ class classic_segmentator:
         plt.xlabel('Log(Box size)')
         plt.ylabel('Log(Box count)')
         plt.legend()
-        plt.savefig(f'{self.root}/fractal_fit/{self.filename}')
+        #plt.savefig(f'{self.root}/fractal_fit/{self.filename}')
         plt.close()
-
-
 
 
     def plotting_circles(self, props, diameters, min_diameter, max_diameter):
@@ -222,14 +216,13 @@ class classic_segmentator:
                 ax.add_patch(circ)
         plt.savefig(f'{self.root}/segmentation/{self.filename}', dpi=300)
         plt.close(fig)
-        
 
 
 
 class fractal_segmentator:
     def fractal_dimension(self, image_segment):
         """
-        Calcola la dimensione frattale di un segmento usando il metodo box-counting.
+        Fractal dimension using box counting
         """
         def box_count(img, box_size):
             S = np.add.reduceat(
@@ -242,7 +235,7 @@ class fractal_segmentator:
 
         for size in sizes:
             count = box_count(image_segment, size)
-            counts.append(count if count > 0 else 1)  # Evitare zeri
+            counts.append(count if count > 0 else 1)  # Avoiding zeros
 
         log_sizes = np.log(sizes)
         log_counts = np.log(counts)
@@ -252,7 +245,7 @@ class fractal_segmentator:
 
     def refine_segmentation_with_fractal(self, image, threshold=0.08):
         """
-        Raffina la segmentazione esistente basandosi sulla dimensione frattale.
+        IMproves segmentation using fractal dimension tecnique
         """
         thresh_val = threshold_otsu(image)
         binary_segment = image > thresh_val
@@ -264,7 +257,7 @@ class fractal_segmentator:
         
         refined_mask = np.zeros_like(image, dtype=bool)
     
-        print("Valori di dimensione frattale per ogni segmento:")
+        print("Fractal dimension for the segment:")
         
         for region in measure.regionprops(labeled_segments):
             if region.area >= 50:
@@ -272,11 +265,10 @@ class fractal_segmentator:
                 segment = binary_segment[minr:maxr, minc:maxc]
                 segment_outline = morphology.binary_dilation(segment) ^ segment
                 
-                # Calcolo della dimensione frattale del contorno
                 fractal_dim = self.fractal_dimension(segment_outline)
-                print(f"Dimensione frattale del segmento ({minr}, {minc}) - ({maxr}, {maxc}): {fractal_dim}")
+                print(f"Frantal dimension of the segment ({minr}, {minc}) - ({maxr}, {maxc}): {fractal_dim}")
                 
-                # Filtrare per dimensione frattale
+                # filtering for fractal dimenasion
                 if fractal_dim > threshold:
                     refined_mask[minr:maxr, minc:maxc] |= segment
 
@@ -287,59 +279,51 @@ class heigth_measurer:
 
     def __init__(self, root):
         self.root = root
-        self.roi_coords = []  # Per salvare le coordinate della ROI
+        self.roi_coords = []  # Saving ROI coords
 
     def select_roi(self, image):
-        """
-        Mostra l'immagine e consente di selezionare una ROI interattiva con il mouse.
-        """
+
         def onselect(eclick, erelease):
             """
-            Callback per la selezione della ROI.
-            Salva le coordinate della bounding box selezionata.
+            Callback for the ROI selection.
+            Saves the coordinates of the ROI
             """
             x1, y1 = int(eclick.xdata), int(eclick.ydata)
             x2, y2 = int(erelease.xdata), int(erelease.ydata)
             self.roi_coords = [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
             print(f"ROI selected: {self.roi_coords}")
-            plt.close()  # Chiude la finestra dopo la selezione
+            plt.close()  
 
-        # Visualizza l'immagine per selezionare la ROI
         fig, ax = plt.subplots()
         ax.imshow(image, cmap='gray')
         ax.set_title("Select the ROI")
 
-        # Inizializza RectangleSelector
         toggle_selector = RectangleSelector(
             ax, onselect, drawtype='box', useblit=True,
-            button=[1],  # Solo click sinistro
-            minspanx=5, minspany=5,  # Dimensione minima della selezione
+            button=[1],  # Left click
+            minspanx=5, minspany=5,  # minimum costrain on the area
             spancoords='pixels', interactive=True
         )
         plt.show()
-
-        # Ritorna le coordinate della ROI (opzionale)
         return self.roi_coords
         
+    """
+    Measures the heigth of the foam of a binarized image
+    The foam is seen as contiguous null rows 
+    """
+    def measure_foam_heigth(self, frame, bounding_box):
 
-    def misura_altezza_schiuma(self, frame, bounding_box):
-        """
-        Calcola l'altezza della schiuma in un'immagine binarizzata.
-        La schiuma è rappresentata da righe completamente nere.
-        """
         x, y, w, h = bounding_box
-        
-        # Ritaglia la regione di interesse (ROI) dall'immagine
         roi = frame[y:y+h, x:x+w]
         
-        # Conta le righe completamente nere
-        row_sums = np.sum(roi == 0, axis=1)  # Somma dei pixel neri per riga
-        foam_rows = np.where(row_sums == w)[0]  # Trova righe completamente nere
+        # Counts null raws
+        row_sums = np.sum(roi == 0, axis=1)  # Black pixels per column
+        foam_rows = np.where(row_sums == w)[0]  # find black rows
         
         if foam_rows.size > 0:
-            foam_height = len(foam_rows)  # Numero di righe completamente nere consecutive
+            foam_height = len(foam_rows)  # number of contiguous black raws
         else:
-            foam_height = 0  # Nessuna schiuma rilevata
+            foam_height = 0 
         
         return foam_height
 
@@ -360,7 +344,7 @@ class heigth_measurer:
             # Iterate over all columns in the ROI
             for x in range(start_x, end_x):
                 bounding_box = (x, start_y, 1, end_y - start_y)  # 1-pixel wide column
-                foam_height = self.misura_altezza_schiuma(frame, bounding_box)
+                foam_height = self.measure_foam_heigth(frame, bounding_box)
                 heights.append(foam_height)
 
             # Calculate mean and standard deviation of heights
@@ -392,24 +376,20 @@ class heigth_measurer:
         means = [h[0] for h in column_heights]
         std_devs = [h[1] for h in column_heights]
         
-        # Fit esponenziale
-        def funzione_esponenziale(t, a, b, c):
+        # Fit exp
+        def exp_func(t, a, b, c):
             return a * np.exp(b * t) + c
 
         time_indices = np.arange(len(images))
-        parametri_iniziali = [1, 0.01, 1]  # Valori iniziali per il fit
-        popt, _ = curve_fit(funzione_esponenziale, time_indices, means, p0=parametri_iniziali, maxfev=5000)
+        parametri_iniziali = [1, 0.01, 1]  
+        popt, _ = curve_fit(exp_func, time_indices, means, p0=parametri_iniziali, maxfev=5000)
 
-        # Parametri ottimizzati
+        # Parameters
         a, b, c = popt
-
-        # Calcola i valori del fit
-        fit_values = funzione_esponenziale(time_indices, a, b, c)
-        
-        # Plot delle altezze con barre di errore e fit esponenziale
+        fit_values = exp_func(time_indices, a, b, c)
         plt.figure(figsize=(12, 6))
         
-        # Dati originali con barre di errore
+        # Errorbar plot
         plt.errorbar(
             time_indices,
             means,
@@ -423,7 +403,6 @@ class heigth_measurer:
             label='Column average'
         )
         
-        # Fit esponenziale
         plt.plot(
             time_indices,
             fit_values,
@@ -451,7 +430,7 @@ class Binarizer:
     @staticmethod
     def apply_clahe(image):
         """
-        Applica il filtro CLAHE per migliorare il contrasto dell'immagine.
+        Applied CLAHE filter to improve contrast
         """
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         return clahe.apply(image)
@@ -459,14 +438,14 @@ class Binarizer:
     @staticmethod
     def median_filter(image):
         """
-        Applica il filtro mediano all'immagine.
+        Applies median filter
         """
         return cv2.medianBlur(image, 7)
 
     @staticmethod
     def threshold_otsu(image):
         """
-        Applica la soglia di Otsu per binarizzare l'immagine.
+        Otsu treshold
         """
         return cv2.bitwise_not(cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1])
                   
@@ -474,13 +453,13 @@ class Binarizer:
     @staticmethod
     def clean_binary_image(binary_image):
         """
-        Rimuove piccoli oggetti dal risultato binarizzato.
+        Removes small objects
         """
         return morphology.remove_small_objects(binary_image.astype(bool), min_size=50).astype(np.uint8)
 
     def process_image(self, image):
         """
-        Esegue la binarizzazione completa su un'immagine.
+        Biarizes image
         """
         if len(image.shape) == 3:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -495,11 +474,11 @@ class Binarizer:
 
     def binarize_folder(self):
          
-        # Binarizza l'immagine
+        # Binarizes image
         binary_image = self.process_image(self.img)
                     
         output_path = os.path.join(self.origin_folder, self.root, 'binarization')
         os.makedirs(output_path, exist_ok=True)
-        plt.imsave(f'{self.root}/binarization/{self.filename}', arr=binary_image, cmap='gray')
+        plt.imsave(f'{self.root}/binarization/{self.filename}', arr=binary_image, cmap='gray', dpi=300)
                     
         return binary_image

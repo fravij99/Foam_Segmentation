@@ -3,7 +3,7 @@ import os
 from tqdm import tqdm
 
 
-main_folder = "C:/Users/Francesco/OneDrive/Desktop/borsista/codice_colibri/foam_imaging/prova"
+main_folder = "C:/Users/Francesco/Downloads/AVRocca"
 # Specifica la cartella principale
 
 # Itera su tutte le sotto-cartelle e i file in esse contenuti
