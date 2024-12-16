@@ -7,7 +7,7 @@ import seaborn as sns
 
 sns.set_style('darkgrid')
 # Percorso principale
-main_folder = "C:/Users/Francesco/Downloads/IDSRocca"
+main_folder = "C:/Users/Francesco/Downloads/prova_final"
 
 
 for root, dirs, files in os.walk(main_folder):
@@ -30,6 +30,7 @@ for root, dirs, files in os.walk(main_folder):
 
     # Usa HeightMeasurer per selezionare la ROI
     heigth = foamlib.heigth_measurer(root)
+    binary_images=binary_images[11:]
     plt.imshow(binary_images[len(binary_images)-1], cmap='gray')
     plt.show()
     roi_coords = heigth.select_roi(binary_images[0])  # Seleziona ROI dalla prima immagine
@@ -41,5 +42,6 @@ for root, dirs, files in os.walk(main_folder):
     # Usa le coordinate della ROI selezionata
     start_x, start_y, end_x, end_y = roi_coords[0], roi_coords[1], roi_coords[2], roi_coords[3]
 
+    
     # Traccia l'evoluzione temporale della schiuma
     heigth.foam_progression_plot(binary_images, start_x, end_x, start_y, end_y)

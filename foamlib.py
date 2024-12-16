@@ -332,6 +332,7 @@ class heigth_measurer:
         """
         Calculate and plot the temporal evolution of foam height deterministically.
         Handles outliers in the column heights by weighting them to reduce their impact on the statistics.
+        Allows fitting with either an arctangent or an exponential function, choosing the best fit.
         """
         # List to store mean heights and standard deviations for all images
         column_heights = []
@@ -375,20 +376,48 @@ class heigth_measurer:
         # Separate means and standard deviations for plotting
         means = [h[0] for h in column_heights]
         std_devs = [h[1] for h in column_heights]
-        
-        # Fit exp
+
+        # Fit arctan function
+        def arc_func(t, a, b, c, d):
+            return -a * np.arctan(b * t + c) + d
+
+        # Fit exponential function
         def exp_func(t, a, b, c):
-            return a * np.exp(b * t) + c
+            return a * np.exp(-b * t) + c
 
         time_indices = np.arange(len(images))
-        parametri_iniziali = [1, 0.01, 1]  
-        popt, _ = curve_fit(exp_func, time_indices, means, p0=parametri_iniziali, maxfev=5000)
 
-        # Parameters
-        a, b, c = popt
-        fit_values = exp_func(time_indices, a, b, c)
+        # Initial parameters for both fits
+        arc_initial_params = [1, 0.01, 0, 1]
+        exp_initial_params = [1, 0.01, 1]
+
+        # Perform fits
+        arc_popt, _ = curve_fit(arc_func, time_indices, means, p0=arc_initial_params, maxfev=10000)
+        exp_popt, _ = curve_fit(exp_func, time_indices, means, p0=exp_initial_params, maxfev=10000)
+
+        # Calculate fitted values
+        arc_fit_values = arc_func(time_indices, *arc_popt)
+        exp_fit_values = exp_func(time_indices, *exp_popt)
+
+        # Calculate RMSE for each fit
+        arc_rmse = np.sqrt(np.mean((means - arc_fit_values) ** 2))
+        exp_rmse = np.sqrt(np.mean((means - exp_fit_values) ** 2))
+
+        # Choose the best fit
+        if arc_rmse < exp_rmse:
+            best_fit = 'arc'
+            best_fit_values = arc_fit_values
+            best_popt = arc_popt
+            fit_label = f'Arctan fit: a={arc_popt[0]:.2f}, b={arc_popt[1]:.4f}, c={arc_popt[2]:.2f}, d={arc_popt[3]:.2f}'
+        else:
+            best_fit = 'exp'
+            best_fit_values = exp_fit_values
+            best_popt = exp_popt
+            fit_label = f'Exponential fit: a={exp_popt[0]:.2f}, b={exp_popt[1]:.4f}, c={exp_popt[2]:.2f}'
+
+        # Plot the results
         plt.figure(figsize=(12, 6))
-        
+
         # Errorbar plot
         plt.errorbar(
             time_indices,
@@ -402,21 +431,50 @@ class heigth_measurer:
             capsize=3,
             label='Column average'
         )
-        
+
         plt.plot(
             time_indices,
-            fit_values,
+            best_fit_values,
             color='red',
             linestyle='--',
-            label=f'Exp fit: a={a:.2f}, b={b:.4f}, c={c:.2f}'
+            label=fit_label
         )
-        
+
         plt.xlabel('Frames')
-        plt.ylabel('Foam heigth (pixel)')
-        plt.title(f'Foam evolution')
+        plt.ylabel('Foam height (pixel)')
+        plt.title(f'Foam evolution - Best fit: {best_fit}')
         plt.legend()
-        plt.savefig(self.root+f'curve_fit.png', dpi=300)
+        plt.savefig(self.root + f'curve_fit_{best_fit}.png', dpi=300)
         plt.show()
+
+
+        self.save_foam_data_to_excel(means, std_devs)
+
+
+
+
+    def save_foam_data_to_excel(self, means, std_devs, filename='foam_data.xlsx'):
+        """
+        Save foam height means and standard deviations to an Excel file.
+
+        Parameters:
+            means (list): List of mean foam heights.
+            std_devs (list): List of standard deviations of foam heights.
+            filename (str): Name of the Excel file to save.
+        """
+        # Create a DataFrame from the data
+        data = {
+            'Frame': np.arange(len(means)) + 1,  # Frame numbers start from 1
+            'Mean Height (pixels)': means,
+            'Standard Deviation (pixels)': std_devs
+        }
+        df = pd.DataFrame(data)
+
+        # Save to Excel
+        output_path = self.root + filename
+        df.to_excel(output_path, index=False, sheet_name='Foam Data')
+        print(f"Data saved to {output_path}")
+
 
 
 class Binarizer:
