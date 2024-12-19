@@ -97,11 +97,22 @@ The implementation is pretty well authomatized, so the user has to change only f
 
 ### Classic Segmentator
 
-The **classic_segmentator** processes foam images from a top-down perspective, applying various steps such as binarization, segmentation, fractal analysis, and scaling fits. Below are some examples of the results:
 
-| **Original Image** | **Binarized Image** | **Segmented Image** | **Fractal Fit** | **Scaling Fit** |
-|---------------------|---------------------|----------------------|-----------------|-----------------|
-| ![Original](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg) | ![Binarized](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg) | ![Segmented](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg) | ![Fractal Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg) | ![Scaling Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png) |
+The **classic_segmentator** processes foam images from a top-down perspective. Below are the key steps and results:
+
+#### Row 1: Original Image, Binarized Image, Segmented Image
+<p align="center">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg" width="250" alt="Original Image">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg" width="250" alt="Binarized Image">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg" width="250" alt="Segmented Image">
+</p>
+
+#### Row 2: Fractal Fit, Scaling Fit
+<p align="center">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg" width="300" alt="Fractal Fit">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png" width="300" alt="Scaling Fit">
+</p>
+
 
 ---
 
