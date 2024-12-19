@@ -3,11 +3,14 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)  
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/schiumaweb.jpg  width="270">
+<p align="center">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/schiumaweb.jpg" width="400" alt="Foam Analysis Example">
+</p>
 
 ## Introduction
 
 Foam Imaging Segmentator is a Python-based toolkit for advanced image segmentation of foam structures, with applications ranging from the analysis of sparkling wine bubbles to modeling foam dynamics using statistical mechanics.
+
 
 The project focuses on segmenting and analyzing bubble structures to extract meaningful metrics such as:
 - **Average bubble size** with hyperspectral camera acquiring images from above the glass. 
