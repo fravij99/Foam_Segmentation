@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)  
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/schiumaweb5.jpg  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/schiumaweb.jpg  width="270">
 
 ## Introduction
 
@@ -95,12 +95,14 @@ The implementation is pretty well authomatized, so the user has to change only f
 
 ## Results
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/schiumaweb.jpg  width="270">
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/segmentation1.png  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg  width="270">
 
-## Foam heigth
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/IDSBentivoglio2curve_fit.png  width="270">
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/demo_images_segmented/foam/frameIDS_036.jpg  width="270">
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg  width="270">
+
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg  width="270">
+
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png  width="270">
 
 ---
 
