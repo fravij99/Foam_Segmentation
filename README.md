@@ -77,35 +77,35 @@ pip install numpy opencv-python scikit-image matplotlib scipy os tqdm
 
 ## Code Structure
 ### classic_segmentator
-- `detecting_glass(self)`: Apply the first processing of the image to reduce it to the ROI intrested for the analysis. In my case I used circle recogniton to center and full comprehend the glass containing liquid. 
-- `image_segmentation(self, img, filter, threshold)`: Perform image segmentation.
-- `filtering_counting_bubbles(self, minimum, props)`: Filter and count bubbles by size.
-- `plotting_circles(self, img, props, diameters, min_diameter)`: Plot circles around detected bubbles.
-- `computing_fractal_dimension(self, binary_image, min_box_size, max_box_size)`: Calculate fractal dimension using the box-counting method.
-- `fractal_dimension_fit(self, fractal_dimension, box_sizes, box_counts)`: Visualize the fit of the fractal dimension calculation.
-- `calculate_scaling_exponent(self, diameters, output_excel_path)`: calculates the Scaling Exponent of a log-log fit on the bubbble diameters distribution. It writes a .xlsx file containing the exponent computed for every frame.
+- `detecting_glass(self)`: Applies the first processing of the image to reduce it to the ROI intrested for the analysis. In my case I used circle recogniton to center and full comprehend the glass containing liquid. 
+- `image_segmentation(self, img, filter, threshold)`: Performs image segmentation.
+- `filtering_counting_bubbles(self, minimum, props)`: Filters and count bubbles by size.
+- `plotting_circles(self, img, props, diameters, min_diameter)`: Plots circles around detected bubbles.
+- `computing_fractal_dimension(self, binary_image, min_box_size, max_box_size)`: Calculates fractal dimension using the box-counting method.
+- `fractal_dimension_fit(self, fractal_dimension, box_sizes, box_counts)`: Visualizes the fit of the fractal dimension calculation.
+- `calculate_scaling_exponent(self, diameters, output_excel_path)`: Calculates the Scaling Exponent of a log-log fit on the bubbble diameters distribution. It writes a .xlsx file containing the exponent computed for every frame.
 
 ### fractal_segmentator
-- `fractal_dimension(self, image_segment)`: Calculate the fractal dimension of a segment.
-- `refine_segmentation_with_fractal(self, image, threshold)`: Refine segmentation based on fractal dimension analysis.
+- `fractal_dimension(self, image_segment)`: Calculates the fractal dimension of a segment.
+- `refine_segmentation_with_fractal(self, image, threshold)`: Refines segmentation based on fractal dimension analysis.
 
 ### binarizer
-- `median_filter(self, contrast)`: Apply a median filter.
-- `gaussian_filter(self, contrast)`: Apply a Gaussian filter.
-- `threshold_otsu(self, smoothed)`: Apply Otsu's thresholding.
-- `threshold_adaptive(self, smoothed)`: Apply adaptive thresholding.
+- `median_filter(self, contrast)`: Applies a median filter.
+- `gaussian_filter(self, contrast)`: Applies a Gaussian filter.
+- `threshold_otsu(self, smoothed)`: Applies Otsu's thresholding.
+- `threshold_adaptive(self, smoothed)`: Applies adaptive thresholding.
 - `process_image(self, image)`: Implements different methods for the image preprocessing as: applying median and clahe filter, Otsu threshold and removing small objects.
 - `binarize_folder(self, image)`: Implements `process_image` function and saves the binarized images in a folder.
 
 ### heigth_measurer
 - `select_roi(self, image)`: Shows the last and the first binarized image of the folder and allows the user to select the ROI containing the foam layer by graphic interface. Just use the mouse to select ROI, click and it sves the box vertices.
 - `measure_foam_heigth(self, frame, bounding_box)`: Counts the consecutive null rows of a given column. The foam heigth is measured passing the ROI from the user. The method splits the ROI in contigous columns containing 1 and 0, counting the consecutive 0. 
-- `foam_progression_plot(self, images, bounding_box)`: Implements the previous function in order to give a guess of the mean of the foam heigth. Secondly it implements an exp/arctan fit of the foam progression in time and gives the main parameters of the function that fits best building a ghraph. 
+- `foam_progression_plot(self, images, bounding_box)`: Implements the previous function in order to give a guess of the mean of the foam heigth. Secondly it implements an exp/arctan fit of the foam progression in time and gives the main parameters of the function that fits best, building a ghraph. 
 
 ## Usage
-The `bubble.py`, `foam_heigth.py`, `detecting_ROI.py` and `bubble_size.py` scripts contain a brief implementation of the main functionalities of the library. The scripts are implemented in order to make a multiple segmentation of all the images (frames if you have a video utput like me) of all the subfolders comntaioned in a specific main folder. 
+The `bubble.py`, `foam_heigth.py`, `detecting_ROI.py` and `bubble_size.py` scripts contain a brief implementation of the main functionalities of the library. These scripts are implemented in order to make a multiple segmentation of all the images (frames if you have a video utput like me) of all the subfolders contained in a specific main folder. 
 
-The implementation is pretty well authomatized, so the user has to change only few parameters to start the segmentation. The `heigth_measurer` class has a very fast running, analysing a 100 frames (1250x1080 pixels resoluted) folder in less than 20 seconds. Whereas the `classic_segmentator` class methods result very slow, with a 100 frames folder (2500x2160 pixels resolution) processed in almost 20 minutes (it depends also on the device performance).
+The implementation is pretty well authomatized, so the user has to change only few parameters to start the segmentation. The `heigth_measurer` class has a very fast running, analysing a 100 frames (1250x1080 pixels resoluted) folder in less than 20 seconds. Whereas the `classic_segmentator` class methods result slower, with a 100 frames folder (2500x2160 pixels resolution) processed in almost 15 minutes (it depends also on the device performance).
 
 ---
 
