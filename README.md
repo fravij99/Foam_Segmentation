@@ -95,6 +95,7 @@ The implementation is pretty well authomatized, so the user has to change only f
 
 ## Results
 
+### classic_segmentator
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg  width="270">
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg  width="270">
 
@@ -103,6 +104,16 @@ The implementation is pretty well authomatized, so the user has to change only f
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg  width="270">
 
 <img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png  width="270">
+
+
+### heigth_measurer
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/frameIDS_055.jpg  width="270">
+
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/binarization/frameIDS_055.jpg  width="270">
+
+<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/arctg_fit.png  width="270">
+
+
 
 ---
 
