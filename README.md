@@ -133,8 +133,28 @@ The **heigth_measurer** focuses on foam height analysis using side-view images. 
 |---------------------|---------------------|----------------|
 | ![Original](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/frameIDS_055.jpg) | ![Binarized](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/binarization/frameIDS_055.jpg) | ![Arctan Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/arctg_fit.png) |
 
+### Explanation of Results
 
+1. **Classic Segmentator**:
+The bubbles segmentation presents some points of strength:
+   - Robust image centering and binarization.
+   - Only analytical methods, no machine learning methods involved.
+   - Deterministic methods.
+   - No training of the models, less computing time. 
+   - Scaling fits provide additional statistical insights into bubble distribution.
+   - This tool can be used especially to investigate foam properties and prove statistical mechanics models. 
 
+Unfortunatly it presents also some weaknesses:
+   - Large number of the models parameters. 
+   - It's a gradient-based model, so its performance is strictly related to image resolution, brightness contrast ecc.. (In facts methods to improve contrast and other features are implemented).
+   - Non parallelized code, need of a performing CPU.
+   - No implementation for GPU.
+
+2. **Height Measurer**:
+The precision of the foam heigth computing is quite impressive and it can be seen in the graph of the *arctan* fit, where the error bars are smaller than dots. This precision can be explained by:
+   - Graphic interface for ROI detection, where the human interpretation can avoid the region of the images infected by optical noising phenomenons. 
+   - The binarization is robust.
+   - The computing of the foam heigth is exact (no numerical simulation or minimization needed), for every pixel column the contugous 0 values are counted.
 
 ---
 
