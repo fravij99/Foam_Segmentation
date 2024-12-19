@@ -3,9 +3,22 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)  
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
-<p align="center">
-    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/schiumaweb.jpg" width="400" alt="Foam Analysis Example">
-</p>
+<table>
+<tr>
+    <td align="center">
+        <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/schiumaweb.jpg" width="400" alt="Original Foam Image">
+        <p><strong>Original Foam Image</strong></p>
+    </td>
+    <td align="center">
+        <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/schiumaweb.jpg" width="400" alt="Segmented Foam Image">
+        <p><strong>Segmented Foam Image</strong></p>
+    </td>
+</tr>
+</table>
+
+
+
+
 
 ## Introduction
 
