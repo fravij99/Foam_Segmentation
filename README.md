@@ -87,7 +87,9 @@ pip install numpy opencv-python scikit-image matplotlib scipy os tqdm
 - `foam_progression_plot(self, images, bounding_box)`: Implements the previous function in order to give a guess of the mean of the foam heigth. Secondly it implements an exp/arctan fit of the foam progression in time and gives the main parameters of the function that fits best building a ghraph. 
 
 ## Usage
-The `bubble.py`, `foam_heigth.py`, `detecting_ROI.py` and `bubble_size.py` scripts contain a brief implementation of the main functionalities of the library. The scripts are implemented in order to make a multiple segmemntation of all the images (frames if you have a video utput like me) of all the subfolders comntaioned in a specific main folder. The implementation is pretty well authomatized, so the user has to change only few parameters to start the segmentation. The `heigth_measurer` class has a very fast running, analysing a 100 frames (1250x1080 pixels resoluted) folder in less than 20 seconds. Whereas the `classic_segmentator` class methods result very slow, with a 100 frames folder (2500x2160 pixels resolution) processed in almost 20 minutes (it depends also on the device performance).
+The `bubble.py`, `foam_heigth.py`, `detecting_ROI.py` and `bubble_size.py` scripts contain a brief implementation of the main functionalities of the library. The scripts are implemented in order to make a multiple segmentation of all the images (frames if you have a video utput like me) of all the subfolders comntaioned in a specific main folder. 
+
+The implementation is pretty well authomatized, so the user has to change only few parameters to start the segmentation. The `heigth_measurer` class has a very fast running, analysing a 100 frames (1250x1080 pixels resoluted) folder in less than 20 seconds. Whereas the `classic_segmentator` class methods result very slow, with a 100 frames folder (2500x2160 pixels resolution) processed in almost 20 minutes (it depends also on the device performance).
 
 ---
 
