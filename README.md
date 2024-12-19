@@ -95,23 +95,25 @@ The implementation is pretty well authomatized, so the user has to change only f
 
 ## Results
 
-### classic_segmentator
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg  width="270">
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg  width="270">
+### Classic Segmentator
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg  width="270">
+The **classic_segmentator** processes foam images from a top-down perspective, applying various steps such as binarization, segmentation, fractal analysis, and scaling fits. Below are some examples of the results:
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg  width="270">
+| **Original Image** | **Binarized Image** | **Segmented Image** | **Fractal Fit** | **Scaling Fit** |
+|---------------------|---------------------|----------------------|-----------------|-----------------|
+| ![Original](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg) | ![Binarized](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg) | ![Segmented](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg) | ![Fractal Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg) | ![Scaling Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png) |
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png  width="270">
+---
 
+### Height Measurer
 
-### heigth_measurer
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/frameIDS_055.jpg  width="270">
+The **heigth_measurer** focuses on foam height analysis using side-view images. It performs binarization, foam height measurement, and temporal progression fitting. Below are some examples:
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/binarization/frameIDS_055.jpg  width="270">
+| **Original Image** | **Binarized Image** | **Arctan Fit** |
+|---------------------|---------------------|----------------|
+| ![Original](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/frameIDS_055.jpg) | ![Binarized](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/binarization/frameIDS_055.jpg) | ![Arctan Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/arctg_fit.png) |
 
-<img align="right" src=https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/side_sight/arctg_fit.png  width="270">
+---
 
 
 
