@@ -143,7 +143,6 @@ The bubbles segmentation presents some points of strength:
    - No training of the models, less computing time. 
    - Scaling fits provide additional statistical insights into bubble distribution.
    - This tool can be used especially to investigate foam properties and prove statistical mechanics models. 
-
 Unfortunatly it presents also some weaknesses:
    - Large number of the models parameters. 
    - It's a gradient-based model, so its performance is strictly related to image resolution, brightness contrast ecc.. (In facts methods to improve contrast and other features are implemented).
