@@ -103,7 +103,7 @@ The **classic_segmentator** processes foam images from a top-down perspective. B
 #### Row 1: Original Image, Binarized Image, Segmented Image
 <p align="center">
     <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg" width="250" alt="Original Image">
-    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg" width="250" alt="Binarized Image">
+    <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg" width="200" alt="Binarized Image">
     <img src="https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg" width="250" alt="Segmented Image">
 </p>
 
