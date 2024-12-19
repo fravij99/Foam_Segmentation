@@ -104,7 +104,7 @@ The **classic_segmentator** processes foam images from a top-down perspective, a
 | ![Original](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/frameAV_077.jpg) | ![Binarized](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/binarization/frameAV_077.jpg) | ![Segmented](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/segmentation/frameAV_077.jpg) | 
 
 |**Fractal Fit** | **Scaling Fit** |
-|----------------------------------------|--------------------------------------------------------|
+|-----------------------------------|-------------------------------------------------------------|
 |![Fractal Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/fractal_fit/frameAV_077.jpg) | ![Scaling Fit](https://github.com/fravij99/Foam_Segmentation/blob/master/datasets_and_results/above_sight/scaling_fit/frameAV_077.jpg_scaling_fit.png) |
 
 ---
