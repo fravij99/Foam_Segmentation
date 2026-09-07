@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foam_segmentation"
+version = "0.1.0"
+description = "Foam Imaging Segmentator: Advanced Bubble and Foam Analysis Toolkit"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name="Francesco Villa", email="fravilla30@gmail.com" },
+]
+dependencies = [
+  "numpy",
+  "opencv-python",
+  "scikit-image",
+  "matplotlib",
+  "scipy",
+  "tqdm",
+  "seaborn",
+  "pandas",
+  "openpyxl",
+  "Flask"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/fravij99/Foam_Segmentation"

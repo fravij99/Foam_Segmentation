@@ -5,6 +5,8 @@ from skimage import measure, morphology
 from skimage.color import label2rgb
 from skimage.filters import threshold_otsu
 from scipy.ndimage import binary_fill_holes
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -70,7 +72,7 @@ class classic_segmentator:
         binary = morphology.remove_small_objects(binary.astype(bool), min_size=50).astype(np.uint8)
         output_path = os.path.join(self.origin_folder, self.root, 'binarization')
         os.makedirs(output_path, exist_ok=True)
-        plt.imsave(f'{self.root}/binarization/{self.filename}', cmap='gray', arr=binary, dpi=300)
+        plt.imsave(os.path.join(output_path, self.filename), cmap='gray', arr=binary, dpi=300)
         # Masking
         labels = measure.label(binary, connectivity=2)
         props = measure.regionprops(labels)   
@@ -197,7 +199,7 @@ class classic_segmentator:
         plt.xlabel('Log(Box size)')
         plt.ylabel('Log(Box count)')
         plt.legend()
-        #plt.savefig(f'{self.root}/fractal_fit/{self.filename}')
+        plt.savefig(os.path.join(output_path, self.filename))
         plt.close()
 
 
@@ -214,7 +216,7 @@ class classic_segmentator:
                 radius = bubble.equivalent_diameter / 2
                 circ = plt.Circle((x, y), radius, color='r', fill=False, linewidth=0.7)
                 ax.add_patch(circ)
-        plt.savefig(f'{self.root}/segmentation/{self.filename}', dpi=300)
+        plt.savefig(os.path.join(output_path, self.filename), dpi=300)
         plt.close(fig)
 
 
@@ -299,7 +301,7 @@ class heigth_measurer:
         ax.set_title("Select the ROI")
 
         toggle_selector = RectangleSelector(
-            ax, onselect, drawtype='box', useblit=True,
+            ax, onselect, useblit=True,
             button=[1],  # Left click
             minspanx=5, minspany=5,  # minimum costrain on the area
             spancoords='pixels', interactive=True
@@ -328,7 +330,7 @@ class heigth_measurer:
         return foam_height
 
 
-    def foam_progression_plot(self, images, start_x, end_x, start_y, end_y):
+    def foam_progression_plot(self, images, start_x, end_x, start_y, end_y, show_plot=True):
         """
         Calculate and plot the temporal evolution of foam height deterministically.
         Handles outliers in the column heights by weighting them to reduce their impact on the statistics.
@@ -391,28 +393,33 @@ class heigth_measurer:
         arc_initial_params = [1, 0.01, 0, 1]
         exp_initial_params = [1, 0.01, 1]
 
-        # Perform fits
-        arc_popt, _ = curve_fit(arc_func, time_indices, means, p0=arc_initial_params, maxfev=10000)
-        exp_popt, _ = curve_fit(exp_func, time_indices, means, p0=exp_initial_params, maxfev=10000)
+        # Perform fits with exception handling
+        try:
+            arc_popt, _ = curve_fit(arc_func, time_indices, means, p0=arc_initial_params, maxfev=10000)
+            arc_fit_values = arc_func(time_indices, *arc_popt)
+            arc_rmse = np.sqrt(np.mean((means - arc_fit_values) ** 2))
+        except RuntimeError:
+            arc_rmse = float('inf')
 
-        # Calculate fitted values
-        arc_fit_values = arc_func(time_indices, *arc_popt)
-        exp_fit_values = exp_func(time_indices, *exp_popt)
-
-        # Calculate RMSE for each fit
-        arc_rmse = np.sqrt(np.mean((means - arc_fit_values) ** 2))
-        exp_rmse = np.sqrt(np.mean((means - exp_fit_values) ** 2))
+        try:
+            exp_popt, _ = curve_fit(exp_func, time_indices, means, p0=exp_initial_params, maxfev=10000)
+            exp_fit_values = exp_func(time_indices, *exp_popt)
+            exp_rmse = np.sqrt(np.mean((means - exp_fit_values) ** 2))
+        except RuntimeError:
+            exp_rmse = float('inf')
 
         # Choose the best fit
-        if arc_rmse < exp_rmse:
+        if arc_rmse == float('inf') and exp_rmse == float('inf'):
+            best_fit = 'none'
+            best_fit_values = means
+            fit_label = 'Fit failed'
+        elif arc_rmse < exp_rmse:
             best_fit = 'arc'
             best_fit_values = arc_fit_values
-            best_popt = arc_popt
             fit_label = f'Arctan fit: a={arc_popt[0]:.2f}, b={arc_popt[1]:.4f}, c={arc_popt[2]:.2f}, d={arc_popt[3]:.2f}'
         else:
             best_fit = 'exp'
             best_fit_values = exp_fit_values
-            best_popt = exp_popt
             fit_label = f'Exponential fit: a={exp_popt[0]:.2f}, b={exp_popt[1]:.4f}, c={exp_popt[2]:.2f}'
 
         # Plot the results
@@ -444,9 +451,15 @@ class heigth_measurer:
         plt.ylabel('Foam height (pixel)')
         plt.title(f'Foam evolution - Best fit: {best_fit}')
         plt.legend()
-        plt.savefig(self.root + f'curve_fit_{best_fit}.png', dpi=300)
-        plt.show()
-
+        
+        # Make sure path is robust
+        out_path = os.path.join(self.root, f'curve_fit_{best_fit}.png')
+        plt.savefig(out_path, dpi=300)
+        
+        if show_plot:
+            plt.show()
+        else:
+            plt.close()
 
         self.save_foam_data_to_excel(means, std_devs)
 
@@ -471,7 +484,7 @@ class heigth_measurer:
         df = pd.DataFrame(data)
 
         # Save to Excel
-        output_path = self.root + filename
+        output_path = os.path.join(self.root, filename)
         df.to_excel(output_path, index=False, sheet_name='Foam Data')
         print(f"Data saved to {output_path}")
 
@@ -537,6 +550,6 @@ class Binarizer:
                     
         output_path = os.path.join(self.origin_folder, self.root, 'binarization')
         os.makedirs(output_path, exist_ok=True)
-        plt.imsave(f'{self.root}/binarization/{self.filename}', arr=binary_image, cmap='gray', dpi=300)
+        plt.imsave(os.path.join(output_path, self.filename), arr=binary_image, cmap='gray', dpi=300)
                     
         return binary_image

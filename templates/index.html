@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foam Segmentation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    
+    <div class="container glass-panel">
+        <header>
+            <h1>Foam Segmentation</h1>
+            <p>Advanced Bubble and Foam Analysis Toolkit</p>
+        </header>
+        
+        <main>
+            <div class="input-section">
+                <label for="folder-path">Images Folder Path:</label>
+                <div class="folder-input-group">
+                    <input type="text" id="folder-path" placeholder="C:/Users/..." readonly>
+                    <button id="browse-btn" class="btn primary-btn">Browse</button>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <div class="action-card glass-card">
+                    <h3>Top-Down Analysis</h3>
+                    <p>Analyze foam bubbles (average size, fractal dim, etc.) from above.</p>
+                    <button id="analyze-top-btn" class="btn" disabled>Start Analysis</button>
+                </div>
+                
+                <div class="action-card glass-card">
+                    <h3>Side-View Analysis</h3>
+                    <p>Analyze foam height progression and relaxation over time.</p>
+                    <button id="analyze-side-btn" class="btn" disabled>Select ROI & Start</button>
+                </div>
+            </div>
+
+            <div id="results-section" class="hidden">
+                <h2>Results</h2>
+                <div id="results-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Folder Browser Modal -->
+    <div id="folder-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Select Directory</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="current-path-display">
+                    <button id="up-dir-btn" class="icon-btn">⬆️ Up</button>
+                    <span id="current-dir-text">/</span>
+                </div>
+                <ul id="dir-list" class="dir-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="select-dir-btn" class="btn primary-btn">Select Current Folder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROI Selection Modal -->
+    <div id="roi-modal" class="modal hidden">
+        <div class="modal-content glass-panel roi-content">
+            <div class="modal-header">
+                <h2>Select Region of Interest</h2>
+                <span class="close-roi-modal">&times;</span>
+            </div>
+            <div class="modal-body roi-body">
+                <p>Click and drag to select the region containing the foam layer.</p>
+                <div class="canvas-container">
+                    <canvas id="roi-canvas"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-roi-btn" class="btn primary-btn">Confirm ROI & Analyze</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

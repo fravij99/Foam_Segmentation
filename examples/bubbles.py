@@ -1,4 +1,4 @@
-import foamlib
+import foam_segmentation as foamlib
 import os
 from tqdm import tqdm
 

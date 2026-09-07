@@ -1,4 +1,4 @@
-import foamlib
+import foam_segmentation as foamlib
 import matplotlib.pyplot as plt
 
 
