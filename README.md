@@ -54,20 +54,25 @@ This work bridges the gap between image processing and physical modeling, offeri
 ---
 
 ## Requirements
-To use this library, ensure you have the required Python packages installed:
-
-```pip install numpy opencv-python scikit-image matplotlib scipy os tqdm```
+To use this library, ensure you have Python 3.8+ installed. All dependencies are managed automatically via `pyproject.toml`.
 
 ---
 
 ## Installation
 
-To get started, clone the repository and install the required dependencies:
+To get started, clone the repository and install the package locally:
 
 ```bash
 git clone https://github.com/fravij99/Foam_Segmentation.git
 cd Foam_Segmentation
-pip install numpy opencv-python scikit-image matplotlib scipy os tqdm
+
+# Create a virtual environment (recommended)
+python -m venv venv
+# On Windows: .\venv\Scripts\activate
+# On Linux/Mac: source venv/bin/activate
+
+# Install the package and its dependencies (Flask, OpenCV, Scikit-Image, etc.)
+pip install -e .
 ```
 
 ---
@@ -100,9 +105,20 @@ pip install numpy opencv-python scikit-image matplotlib scipy os tqdm
 - `foam_progression_plot(self, images, bounding_box)`: Implements the previous function in order to give a guess of the mean of the foam heigth. Secondly it implements an exp/arctan fit of the foam progression in time and gives the main parameters of the function that fits best, building a ghraph. 
 
 ## Usage
-The `bubble.py`, `foam_heigth.py`, `detecting_ROI.py` and `bubble_size.py` scripts contain a brief implementation of the main functionalities of the library. These scripts are implemented in order to make a multiple segmentation of all the images (frames if you have a video utput like me) of all the subfolders contained in a specific main folder. 
 
-The implementation is pretty well authomatized, so the user has to change only few parameters to start the segmentation. The `heigth_measurer` class has a very fast running, analysing a 100 frames (1250x1080 pixels resoluted) folder in less than 20 seconds. Whereas the `classic_segmentator` class methods result slower, with a 100 frames folder (2500x2160 pixels resolution) processed in almost 15 minutes (it depends also on the device performance).
+### 1. Web Dashboard (New!)
+The easiest way to use the library is through the interactive **Web Dashboard**. It provides a beautiful interface to navigate your local file system, select image folders, visually draw Region of Interests (ROIs) on a Canvas, and automatically run the foam analysis models.
+
+To launch the dashboard, run:
+```bash
+python app.py
+```
+Then open your browser and navigate to `http://127.0.0.1:5000`. 
+
+### 2. Python Scripts (CLI)
+If you prefer running analyses headlessly or in batch, you can use the scripts provided in the `examples/` folder (e.g., `bubbles.py`, `foam_heigth.py`, `detecting_ROI.py`). 
+
+The implementation is highly automated. The `heigth_measurer` class runs very fast, analyzing 100 frames (1250x1080 pixels) in less than 20 seconds. The `classic_segmentator` class methods are more computationally intensive, processing 100 frames (2500x2160 pixels) in about 15 minutes (depending on device performance).
 
 ---
 
