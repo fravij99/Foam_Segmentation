@@ -73,3 +73,6 @@ coverage.xml
 *.tif
 *.tiff
 test_folder*/
+
+# Allow tracking for the reference datasets used in the README
+!datasets_and_results/
