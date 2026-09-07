@@ -91,21 +91,21 @@ class classic_segmentator:
         Returns:
             (float, list, list): The fractal dimension of a frame and the data for the plot."""
     def computing_fractal_dimension(self, binary_image, min_box_size=2, max_box_size=1000):
-        box_sizes = []
+        binary = np.asarray(binary_image).astype(bool)
+        box_sizes = list(range(min_box_size, max_box_size, 2))
         box_counts = []
-        
-        # Box counting
-        for box_size in range(min_box_size, max_box_size, 2):
-            # Dividing image into a grid (box_size X box_size)
-            count = 0
-            for y in range(0, binary_image.shape[0], box_size):
-                for x in range(0, binary_image.shape[1], box_size):
-                    # If a pixel is white, it's a bubble
-                    if np.any(binary_image[y:y + box_size, x:x + box_size]):
-                        count += 1
-            box_sizes.append(box_size)
-            box_counts.append(count)
-        
+
+        # Box counting: block-reduce the whole grid at once instead of looping pixel-by-pixel
+        for box_size in box_sizes:
+            pad_h = (-binary.shape[0]) % box_size
+            pad_w = (-binary.shape[1]) % box_size
+            # Zero-padding never adds a "white" pixel, so edge boxes are counted like in the original slicing
+            padded = np.pad(binary, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=False)
+            blocks = padded.reshape(padded.shape[0] // box_size, box_size,
+                                     padded.shape[1] // box_size, box_size)
+            occupied = blocks.any(axis=(1, 3))
+            box_counts.append(int(np.count_nonzero(occupied)))
+
         # Fractal dimension with least square method
         coeffs = np.polyfit(np.log(box_sizes), np.log(box_counts), 1)
         fractal_dimension = -coeffs[0]
